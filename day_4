@@ -1,0 +1,73 @@
+## part 1
+data = []
+for line in open('input'):
+    data.append(line.split('\n')[0])
+
+times = []
+for line in data:
+    time = line.split('[')[1].split(']')[0]
+    t = datetime.strptime(time, '%Y-%m-%d %H:%M')
+    times.append(t)
+
+wh = np.argsort(times)
+
+elf_dict = {}
+for line in np.array(data)[wh]:
+    split_line = line.split()
+    if 'Guard' in line:
+        elf_num = split_line[3]
+        if elf_num not in elf_dict.keys():
+            elf_dict[elf_num] = {'up' : {'day':[], 'hour':[], 'min':[]},
+                                 'asleep' : {'day':[], 'hour':[], 'min':[] } }
+        else:
+            #elf already in dictionary
+            continue
+    else:
+        sleep_flag = split_line[-1]
+        time = line.split('[')[1].split(']')[0]
+        t = datetime.strptime(time, '%Y-%m-%d %H:%M')
+        day = calculate_dayofyear(t.month, t.day)
+        elf_dict[elf_num][sleep_flag]['day'].append(day)
+        elf_dict[elf_num][sleep_flag]['hour'].append(t.hour)
+        elf_dict[elf_num][sleep_flag]['min'].append(t.minute)
+
+#print(elf_dict)
+# next step is to fill in the blanks for the minutes they were awake
+# I'm not clear on if the minute is the only thing that matters, but since that's easiest, we'll try that first (?)
+elf_by_minutes = {}
+for elf in elf_dict.keys():
+    temp_awake = elf_dict[elf]['up']
+    temp_asleep = elf_dict[elf]['asleep']
+    all_minutes_for_elf = []
+    for up_h, down_h, up_m, down_m in zip(temp_awake['hour'], temp_asleep['hour'], temp_awake['min'], temp_asleep['min']):
+        if up_h != down_h:
+            minutes = np.arange(down_h, 60)
+            minutes.extend(0, up_m)
+        else:
+            minutes = np.arange(down_m, up_m)
+        all_minutes_for_elf.extend(minutes)
+    elf_by_minutes[elf] = all_minutes_for_elf
+elf = []
+elf_mode = []
+elf_minute = []
+for key, value in elf_by_minutes.items():
+    elf_mode.append(mode(value)[0])
+    elf_minute.append(len(value))
+    elf.append(key.split('#')[1])
+    print('Minutes asleep:', key, len(value), 'Most common minute asleep:', mode(value)[0])
+wh_elf = np.argmax(elf_minute)
+print('Winner:', elf[wh_elf], elf_mode[wh_elf], int(elf[wh_elf])*elf_mode[wh_elf][0])
+
+## part 2
+elf = []
+elf_mode = []
+elf_mode_count = []
+elf_minute = []
+for key, value in elf_by_minutes.items():
+    elf_mode.append(mode(value)[0])
+    elf_mode_count.append(mode(value)[1])
+    elf_minute.append(len(value))
+    elf.append(key.split('#')[1])
+    print('Minutes asleep:', key, len(value), 'Most common minute asleep:', mode(value)[0], 'Times repeated:', mode(value)[1] )
+wh_elf = np.argmax(elf_mode_count)
+print('Winner:', elf[wh_elf], elf_mode[wh_elf], int(elf[wh_elf])*elf_mode[wh_elf][0])

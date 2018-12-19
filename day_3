@@ -1,0 +1,27 @@
+data_dict = {}
+for line in open('test.txt'):
+    temp_items = line.split()
+    data_dict[temp_items[0]] = { 'x0' : int(temp_items[2].split(',')[0]),
+                                 'y0' : int(temp_items[2].split(',')[1].split(':')[0]),
+                                 'xwidth' : int(temp_items[3].split('x')[0]),
+                                 'ywidth' : int(temp_items[3].split('x')[1]) }
+
+swatch = []
+for key in data_dict.keys():
+    temp_data = data_dict[key]
+    xmin = temp_data['x0']                                               
+    xmax = temp_data['xwidth']+temp_data['x0']
+
+    max_dim = np.max([temp_data['xwidth'], temp_data['ywidth']])
+    xs = []
+    for i in np.arange(temp_data['ywidth']):
+        xs.extend(np.arange(xmin, xmax))
+    ys = []
+    for i in np.arange(temp_data['ywidth']):
+        ys.extend([-1*(i+temp_data['y0'])]*temp_data['xwidth'])
+    plt.plot(xs, ys, '.', ms=20, alpha=0.5)
+    swatch.extend(['{}_{}'.format(x, y) for x, y in zip(xs, ys)])
+
+
+swatch = np.array(swatch)
+print(len(np.where(np.unique(swatch, return_counts=True)[1] > 1)[0]))
